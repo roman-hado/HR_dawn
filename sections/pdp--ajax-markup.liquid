@@ -1,0 +1,189 @@
+{{ 'section-pdp--ajax-markup.css' | asset_url | stylesheet_tag }}
+{{ 'option_selection.js' | shopify_asset_url | script_tag }}
+
+{% assign current_varinat = product.selected_or_first_available_variant %}
+
+<div class="pdp-ajax-markup">
+  <div class="container">
+    <h2 class="pdp-ajax-markup__product-name">
+      {{ product.title }}
+    </h2>
+
+    {% form 'product', product %}
+      <div class="pdp-ajax-markup__options">
+        {% for option in product.options_with_values %}
+          <div class="pdp-ajax-markup__option">
+            <h3>{{ option.name }}:</h3>
+            <div
+              class="pdp-ajax-markup__variants"
+              data-option-position="{{ option.position }}"
+            >
+              {% liquid
+                assign variants_available_arr = product.variants | map: 'available'
+                assign variants_option1_arr = product.variants | map: 'option1'
+                assign variants_option2_arr = product.variants | map: 'option2'
+                assign variants_option3_arr = product.variants | map: 'option3'
+              %}  
+
+              {% for value in option.values %}
+                {% liquid
+                  assign option_disabled = true
+
+                  for option1_name in variants_option1_arr
+                    case option.position
+                      when 1
+                        if variants_option1_arr[forloop.index0] == value and variants_available_arr[forloop.index0]
+                          assign option_disabled = false
+                        endif
+                      when 2
+                        if option1_name == product.selected_or_first_available_variant.option1 and variants_option2_arr[forloop.index0] == value and variants_available_arr[forloop.index0]
+                          assign option_disabled = false
+                        endif
+                      when 3
+                        if option1_name == product.selected_or_first_available_variant.option1 and variants_option2_arr[forloop.index0] == product.selected_or_first_available_variant.option2 and variants_option3_arr[forloop.index0] == value and variants_available_arr[forloop.index0]
+                          assign option_disabled = false
+                        endif
+                    endcase
+                  endfor
+                %}  
+              
+                <div
+                  class="pdp-ajax-markup__variant{% if option.selected_value == value %} is-active{% endif %}"
+                  data-variant-value="{{ value }}"
+                >
+                  {{ value }}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <input type="hidden" name="id" value="{{ current_varinat.id }}" class="product-variant-id">
+
+      <div class="pdp-ajax-markup__buttons">
+        <button class="pdp-ajax-markup__button">
+          Add to cart
+        </button>
+        {{ form | payment_button }}
+      </div>
+    {% endform %}
+  </div>
+</div>
+
+<script>
+  const pdp = document.querySelector(".pdp-ajax-markup");
+  const variants = pdp.querySelectorAll(".pdp-ajax-markup__variant");
+  const allVariants = {{ product.variants | json }};
+  const selectedVariant = {{ product.selected_or_first_available_variant | json }};
+
+  variants.forEach(variant => {
+    variant.addEventListener("click", () => {
+      if (variant.classList.contains("is-active")) {
+        return;
+      }
+      updateVariantClass(variant);
+      const currentVariant = getCurrentVariant(variant);
+      updateInputId(currentVariant.id);
+      updateQueryString('variant', currentVariant.id);
+      updateVariantsAvailability(currentVariant, variant);
+    })
+  });
+
+  updateVariantsAvailability(selectedVariant, variants[0])
+
+  function updateVariantsAvailability(variantObject, selectedVariant) {
+    const options = pdp.querySelectorAll(".pdp-ajax-markup__option").forEach(option => {
+      option.querySelectorAll(".pdp-ajax-markup__variants").forEach(variants => {
+        const optionPosition = variants.dataset.optionPosition;
+        variants.querySelectorAll(".pdp-ajax-markup__variant").forEach(variant => {
+          if (variant.classList.contains("is-active")) return;  
+          const variantValue = variant.dataset.variantValue;
+          const tempOptions = variantObject.options.map((option, index) => {
+            if (index + 1 === +optionPosition) {
+              return variantValue;
+            }
+            return option;
+          });
+          if (allVariants.some(variant => JSON.stringify(variant.options) === JSON.stringify(tempOptions) && variant.available)) {
+            if (variant.classList.contains("disabled")) {
+              variant.classList.remove("disabled");
+            }
+            return;
+          }
+          if (!variant.classList.contains("disabled")) {
+            variant.classList.add("disabled");
+          }
+        });
+      });
+    })
+  }
+
+  function updateInputId(newId) {
+    let inputEl = pdp.querySelector('input[name="id"]');
+    inputEl.value = newId;
+  }
+
+  function updateVariantClass(variant) {
+    const activeClass = "is-active";
+    const variantWrapper = variant.closest('.pdp-ajax-markup__variants');
+    const prevActiveVariant = variantWrapper.querySelector(`.${activeClass}`);
+    prevActiveVariant.classList.remove(activeClass);
+    variant.classList.add(activeClass);
+  };
+
+  function getSelectedOptions() {
+    const selectedVariants = pdp.querySelectorAll('.is-active');
+    return Array.from(selectedVariants).map(variant => variant.dataset.variantValue);
+  };
+
+  function getCurrentVariant(selectedVariant) {
+    const currentOptions = getSelectedOptions();
+    const currentVariant = allVariants.find(variant => {
+      return !variant.options.map(option => currentOptions.includes(option)).includes(false);
+    });
+    return currentVariant;
+  };
+
+	function updateQueryString(key, value, url) {
+		if (!url) url = window.location.href;
+		let updated = ''
+		var re = new RegExp("([?&])" + key + "=.*?(&|#|$)(.*)", "gi"),
+			hash;
+		if (re.test(url)) {
+			if (typeof value !== 'undefined' && value !== null) {
+				updated = url.replace(re, '$1' + key + "=" + value + '$2$3');
+			}
+			else {
+				hash = url.split('#');
+				url = hash[0].replace(re, '$1$3').replace(/(&|\?)$/, '');
+				if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
+					url += '#' + hash[1];
+				}
+				updated = url;
+			}
+		}
+		else {
+			if (typeof value !== 'undefined' && value !== null) {
+				var separator = url.indexOf('?') !== -1 ? '&' : '?';
+				hash = url.split('#');
+				url = hash[0] + separator + key + '=' + value;
+				if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
+					url += '#' + hash[1];
+				}
+				updated = url;
+			}
+			else {
+				updated = url;
+			}
+		}
+		window.history.replaceState({ path: updated }, '', updated);
+	}
+</script>
+
+{% schema %}
+{
+  "name": "Ajax markup",
+  "tag": "section"
+}
+{% endschema %}

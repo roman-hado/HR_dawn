@@ -9,7 +9,7 @@
       {{ product.title }}
     </h2>
 
-    {% form 'product', product %}
+    {% form 'product', product, id: 'product-form' %}
       <div class="pdp-ajax-markup__options">
         {% for option in product.options_with_values %}
           <div class="pdp-ajax-markup__option">
@@ -37,17 +37,65 @@
         <button class="pdp-ajax-markup__button">
           Add to cart
         </button>
-        {{ form | payment_button }}
       </div>
     {% endform %}
   </div>
 </div>
 
-<script>
+<script type="module">
   const pdp = document.querySelector(".pdp-ajax-markup");
   const variants = pdp.querySelectorAll(".pdp-ajax-markup__variant");
   const allVariants = {{ product.variants | json }};
   const selectedVariant = {{ product.selected_or_first_available_variant | json }};
+  const productForm = pdp.querySelector('#product-form');
+
+  productForm.onsubmit = (e) => {
+    e.preventDefault();
+    const variantId = productForm.querySelector('.product-variant-id').value;
+    addCartItemAjax(variantId, 1);
+    updateMarkup();
+
+    // show cart data on console
+    const cartData = getResourses('/cart.js');
+    cartData.then(cart => {
+      console.log("cart - ", cart.items);
+    });
+  };
+
+  const getResourses = async (url) => {
+		let res = await fetch(url);
+
+		if(!res.ok) {
+			throw new Error(`${res.status}`)
+		}
+
+		return await res.json()
+	}
+
+  function addCartItemAjax(id, qty) {
+		$.ajax({
+			type: "POST",
+			url: '/cart/add.js',
+			async: false,
+			data: {
+				items: [
+					{
+						id: id,
+						quantity: qty
+					}
+				]
+			},
+			dataType: 'json',
+			success: function () {
+
+			}
+		});
+	}
+
+  function updateMarkup() {
+    const countEl = document.querySelector(".cart-count-bubble-span");
+    countEl.innerHTML = +countEl.innerHTML + 1;
+  }
 
   variants.forEach(variant => {
     variant.addEventListener("click", () => {

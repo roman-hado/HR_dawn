@@ -1,7 +1,9 @@
 {
   "sections": {
     "main": {
-      "type": "pdp--ajax-markup"
+      "type": "pdp--ajax-markup",
+      "settings": {
+      }
     }
   },
   "order": [

@@ -1,0 +1,10 @@
+{
+  "sections": {
+    "main": {
+      "type": "pdp--ajax-markup"
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

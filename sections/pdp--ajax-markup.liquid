@@ -4,42 +4,42 @@
 {% assign current_varinat = product.selected_or_first_available_variant %}
 
 <div class="pdp-ajax-markup">
-	<div class="container">
-		<h2 class="pdp-ajax-markup__product-name">
+    <div class="container">
+        <h2 class="pdp-ajax-markup__product-name">
             {{ product.title }}
-		</h2>
+        </h2>
 
-		{% form 'product', product, id: 'product-form' %}
-			<div class="pdp-ajax-markup__options">
-				{% for option in product.options_with_values %}
-					<div class="pdp-ajax-markup__option">
-						<h3>{{ option.name }}:</h3>
-						<div
-								class="pdp-ajax-markup__variants"
-								data-option-position="{{ option.position }}"
-						>
-							{% for value in option.values %}
-								<div
-										class="pdp-ajax-markup__variant{% if option.selected_value == value %} is-active{% endif %}"
-										data-variant-value="{{ value }}"
-								>
-									{{ value }}
-								</div>
-							{% endfor %}
-						</div>
-					</div>
-				{% endfor %}
-			</div>
+        {% form 'product', product, id: 'product-form' %}
+            <div class="pdp-ajax-markup__options">
+                {% for option in product.options_with_values %}
+                    <div class="pdp-ajax-markup__option">
+                        <h3>{{ option.name }}:</h3>
+                        <div
+                            class="pdp-ajax-markup__variants"
+                            data-option-position="{{ option.position }}"
+                        >
+                            {% for value in option.values %}
+                                <div
+                                    class="pdp-ajax-markup__variant{% if option.selected_value == value %} is-active{% endif %}"
+                                    data-variant-value="{{ value }}"
+                                >
+                                    {{ value }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
 
-			<input type="hidden" name="id" value="{{ current_varinat.id }}" class="product-variant-id">
+            <input type="hidden" name="id" value="{{ current_varinat.id }}" class="product-variant-id">
 
-			<div class="pdp-ajax-markup__buttons">
-				<button class="pdp-ajax-markup__button">
-					Add to cart
-				</button>
-			</div>
-		{% endform %}
-	</div>
+            <div class="pdp-ajax-markup__buttons">
+                <button class="pdp-ajax-markup__button">
+                    Add to cart
+                </button>
+            </div>
+        {% endform %}
+    </div>
 </div>
 
 <script type="module">

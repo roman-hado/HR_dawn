@@ -106,14 +106,14 @@
             const currentVariant = getCurrentVariant(variant)
             updateInputId(currentVariant.id)
             updateQueryString('variant', currentVariant.id)
-            updateVariantsAvailability(currentVariant, variant)
+            updateVariantsAvailability(currentVariant)
         })
     })
 
-    updateVariantsAvailability(selectedVariant, variants[0])
+    updateVariantsAvailability(variants[0]);
 
-    function updateVariantsAvailability (variantObject, selectedVariant) {
-        const options = pdp.querySelectorAll('.pdp-ajax-markup__option').forEach(option => {
+    function updateVariantsAvailability (variantObject) {
+        pdp.querySelectorAll('.pdp-ajax-markup__option').forEach(option => {
             option.querySelectorAll('.pdp-ajax-markup__variants').forEach(variants => {
                 const optionPosition = variants.dataset.optionPosition
                 variants.querySelectorAll('.pdp-ajax-markup__variant').forEach(variant => {
@@ -158,12 +158,11 @@
         return Array.from(selectedVariants).map(variant => variant.dataset.variantValue)
     }
 
-    function getCurrentVariant (selectedVariant) {
+    function getCurrentVariant () {
         const currentOptions = getSelectedOptions()
-        const currentVariant = allVariants.find(variant => {
+        return allVariants.find(variant => {
             return !variant.options.map(option => currentOptions.includes(option)).includes(false)
         })
-        return currentVariant
     }
 
     function updateQueryString (key, value, url) {

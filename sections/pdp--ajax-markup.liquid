@@ -145,12 +145,12 @@
 	}
 
 	function updateVariantClass(variant) {
-		const activeClass = "is-active";
-		const variantWrapper = variant.closest('.pdp-ajax-markup__variants');
-		const prevActiveVariant = variantWrapper.querySelector(`.${activeClass}`);
+	const activeClass = "is-active";
+	const variantWrapper = variant.closest('.pdp-ajax-markup__variants');
+	const prevActiveVariant = variantWrapper.querySelector(`.${activeClass}`);
 
-		prevActiveVariant.classList.remove(activeClass);
-		variant.classList.add(activeClass);
+	prevActiveVariant.classList.remove(activeClass);
+	variant.classList.add(activeClass);
 	};
 
 	function getSelectedOptions() {

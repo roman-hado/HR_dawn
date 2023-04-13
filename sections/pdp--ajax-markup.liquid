@@ -4,75 +4,75 @@
 {% assign current_varinat = product.selected_or_first_available_variant %}
 
 <div class="pdp-ajax-markup">
-  <div class="container">
-    <h2 class="pdp-ajax-markup__product-name">
-      {{ product.title }}
-    </h2>
+	<div class="container">
+		<h2 class="pdp-ajax-markup__product-name">
+			{{ product.title }}
+		</h2>
 
-    {% form 'product', product, id: 'product-form' %}
-      <div class="pdp-ajax-markup__options">
-        {% for option in product.options_with_values %}
-          <div class="pdp-ajax-markup__option">
-            <h3>{{ option.name }}:</h3>
-            <div
-              class="pdp-ajax-markup__variants"
-              data-option-position="{{ option.position }}"
-            >
-              {% for value in option.values %}              
-                <div
-                  class="pdp-ajax-markup__variant{% if option.selected_value == value %} is-active{% endif %}"
-                  data-variant-value="{{ value }}"
-                >
-                  {{ value }}
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-        {% endfor %}
-      </div>
+		{% form 'product', product, id: 'product-form' %}
+			<div class="pdp-ajax-markup__options">
+				{% for option in product.options_with_values %}
+					<div class="pdp-ajax-markup__option">
+						<h3>{{ option.name }}:</h3>
+						<div
+								class="pdp-ajax-markup__variants"
+								data-option-position="{{ option.position }}"
+						>
+							{% for value in option.values %}
+								<div
+										class="pdp-ajax-markup__variant{% if option.selected_value == value %} is-active{% endif %}"
+										data-variant-value="{{ value }}"
+								>
+									{{ value }}
+								</div>
+							{% endfor %}
+						</div>
+					</div>
+				{% endfor %}
+			</div>
 
-      <input type="hidden" name="id" value="{{ current_varinat.id }}" class="product-variant-id">
+			<input type="hidden" name="id" value="{{ current_varinat.id }}" class="product-variant-id">
 
-      <div class="pdp-ajax-markup__buttons">
-        <button class="pdp-ajax-markup__button">
-          Add to cart
-        </button>
-      </div>
-    {% endform %}
-  </div>
+			<div class="pdp-ajax-markup__buttons">
+				<button class="pdp-ajax-markup__button">
+					Add to cart
+				</button>
+			</div>
+		{% endform %}
+	</div>
 </div>
 
 <script type="module">
-  const pdp = document.querySelector(".pdp-ajax-markup");
-  const variants = pdp.querySelectorAll(".pdp-ajax-markup__variant");
-  const allVariants = {{ product.variants | json }};
-  const selectedVariant = {{ product.selected_or_first_available_variant | json }};
-  const productForm = pdp.querySelector('#product-form');
+	const pdp = document.querySelector(".pdp-ajax-markup");
+	const variants = pdp.querySelectorAll(".pdp-ajax-markup__variant");
+	const allVariants = {{ product.variants | json }};
+	const selectedVariant = {{ product.selected_or_first_available_variant | json }};
+	const productForm = pdp.querySelector('#product-form');
 
-  productForm.onsubmit = (e) => {
-    e.preventDefault();
-    const variantId = productForm.querySelector('.product-variant-id').value;
-    addCartItemAjax(variantId, 1);
-    updateMarkup();
+	productForm.onsubmit = (e) => {
+		e.preventDefault();
+		const variantId = productForm.querySelector('.product-variant-id').value;
+		addCartItemAjax(variantId, 1);
+		updateMarkup();
 
-    // show cart data on console
-    const cartData = getResourses('/cart.js');
-    cartData.then(cart => {
-      console.log("cart - ", cart.items);
-    });
-  };
+		// show cart data on console
+		const cartData = getResourses('/cart.js');
+		cartData.then(cart => {
+			console.log("cart - ", cart.items);
+		});
+	};
 
-  const getResourses = async (url) => {
+	const getResourses = async (url) => {
 		let res = await fetch(url);
 
-		if(!res.ok) {
+		if (!res.ok) {
 			throw new Error(`${res.status}`)
 		}
 
 		return await res.json()
 	}
 
-  function addCartItemAjax(id, qty) {
+	function addCartItemAjax(id, qty) {
 		$.ajax({
 			type: "POST",
 			url: '/cart/add.js',
@@ -92,78 +92,80 @@
 		});
 	}
 
-  function updateMarkup() {
-    const countEl = document.querySelector(".cart-count-bubble-span");
-    countEl.innerHTML = +countEl.innerHTML + 1;
-  }
+	function updateMarkup() {
+		const countEl = document.querySelector(".cart-count-bubble-span");
 
-  variants.forEach(variant => {
-    variant.addEventListener("click", () => {
-      if (variant.classList.contains("is-active")) {
-        return;
-      }
-      updateVariantClass(variant);
-      const currentVariant = getCurrentVariant(variant);
-      updateInputId(currentVariant.id);
-      updateQueryString('variant', currentVariant.id);
-      updateVariantsAvailability(currentVariant, variant);
-    })
-  });
+		countEl.innerHTML = +countEl.innerHTML + 1;
+	}
 
-  updateVariantsAvailability(selectedVariant, variants[0])
+	variants.forEach(variant => {
+		variant.addEventListener("click", () => {
+			if (variant.classList.contains("is-active")) {
+				return;
+			}
+			updateVariantClass(variant);
+			const currentVariant = getCurrentVariant(variant);
+			updateInputId(currentVariant.id);
+			updateQueryString('variant', currentVariant.id);
+			updateVariantsAvailability(currentVariant, variant);
+		})
+	});
 
-  function updateVariantsAvailability(variantObject, selectedVariant) {
-    const options = pdp.querySelectorAll(".pdp-ajax-markup__option").forEach(option => {
-      option.querySelectorAll(".pdp-ajax-markup__variants").forEach(variants => {
-        const optionPosition = variants.dataset.optionPosition;
-        variants.querySelectorAll(".pdp-ajax-markup__variant").forEach(variant => {
-          if (variant.classList.contains("is-active")) return;  
-          const variantValue = variant.dataset.variantValue;
-          const tempOptions = variantObject.options.map((option, index) => {
-            if (index + 1 === +optionPosition) {
-              return variantValue;
-            }
-            return option;
-          });
-          if (allVariants.some(variant => JSON.stringify(variant.options) === JSON.stringify(tempOptions) && variant.available)) {
-            if (variant.classList.contains("disabled")) {
-              variant.classList.remove("disabled");
-            }
-            return;
-          }
-          if (!variant.classList.contains("disabled")) {
-            variant.classList.add("disabled");
-          }
-        });
-      });
-    })
-  }
+	updateVariantsAvailability(selectedVariant, variants[0])
 
-  function updateInputId(newId) {
-    let inputEl = pdp.querySelector('input[name="id"]');
-    inputEl.value = newId;
-  }
+	function updateVariantsAvailability(variantObject, selectedVariant) {
+		const options = pdp.querySelectorAll(".pdp-ajax-markup__option").forEach(option => {
+			option.querySelectorAll(".pdp-ajax-markup__variants").forEach(variants => {
+				const optionPosition = variants.dataset.optionPosition;
+				variants.querySelectorAll(".pdp-ajax-markup__variant").forEach(variant => {
+					if (variant.classList.contains("is-active")) return;
+					const variantValue = variant.dataset.variantValue;
+					const tempOptions = variantObject.options.map((option, index) => {
+						if (index + 1 === +optionPosition) {
+							return variantValue;
+						}
+						return option;
+					});
+					if (allVariants.some(variant => JSON.stringify(variant.options) === JSON.stringify(tempOptions) && variant.available)) {
+						if (variant.classList.contains("disabled")) {
+							variant.classList.remove("disabled");
+						}
+						return;
+					}
+					if (!variant.classList.contains("disabled")) {
+						variant.classList.add("disabled");
+					}
+				});
+			});
+		})
+	}
 
-  function updateVariantClass(variant) {
-    const activeClass = "is-active";
-    const variantWrapper = variant.closest('.pdp-ajax-markup__variants');
-    const prevActiveVariant = variantWrapper.querySelector(`.${activeClass}`);
-    prevActiveVariant.classList.remove(activeClass);
-    variant.classList.add(activeClass);
-  };
+	function updateInputId(newId) {
+		let inputEl = pdp.querySelector('input[name="id"]');
+		inputEl.value = newId;
+	}
 
-  function getSelectedOptions() {
-    const selectedVariants = pdp.querySelectorAll('.is-active');
-    return Array.from(selectedVariants).map(variant => variant.dataset.variantValue);
-  };
+	function updateVariantClass(variant) {
+		const activeClass = "is-active";
+		const variantWrapper = variant.closest('.pdp-ajax-markup__variants');
+		const prevActiveVariant = variantWrapper.querySelector(`.${activeClass}`);
 
-  function getCurrentVariant(selectedVariant) {
-    const currentOptions = getSelectedOptions();
-    const currentVariant = allVariants.find(variant => {
-      return !variant.options.map(option => currentOptions.includes(option)).includes(false);
-    });
-    return currentVariant;
-  };
+		prevActiveVariant.classList.remove(activeClass);
+		variant.classList.add(activeClass);
+	};
+
+	function getSelectedOptions() {
+		const selectedVariants = pdp.querySelectorAll('.is-active');
+		return Array.from(selectedVariants).map(variant => variant.dataset.variantValue);
+	};
+
+	function getCurrentVariant(selectedVariant) {
+		const currentOptions = getSelectedOptions();
+		const currentVariant = allVariants.find(variant => {
+			return !variant.options.map(option => currentOptions.includes(option)).includes(false);
+		});
+		return currentVariant;
+	};
 
 	function updateQueryString(key, value, url) {
 		if (!url) url = window.location.href;
@@ -173,8 +175,7 @@
 		if (re.test(url)) {
 			if (typeof value !== 'undefined' && value !== null) {
 				updated = url.replace(re, '$1' + key + "=" + value + '$2$3');
-			}
-			else {
+			} else {
 				hash = url.split('#');
 				url = hash[0].replace(re, '$1$3').replace(/(&|\?)$/, '');
 				if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
@@ -182,8 +183,7 @@
 				}
 				updated = url;
 			}
-		}
-		else {
+		} else {
 			if (typeof value !== 'undefined' && value !== null) {
 				var separator = url.indexOf('?') !== -1 ? '&' : '?';
 				hash = url.split('#');
@@ -192,18 +192,17 @@
 					url += '#' + hash[1];
 				}
 				updated = url;
-			}
-			else {
+			} else {
 				updated = url;
 			}
 		}
-		window.history.replaceState({ path: updated }, '', updated);
+		window.history.replaceState({path: updated}, '', updated);
 	}
 </script>
 
 {% schema %}
 {
-  "name": "Ajax markup",
-  "tag": "section"
+"name": "Ajax markup",
+"tag": "section"
 }
 {% endschema %}

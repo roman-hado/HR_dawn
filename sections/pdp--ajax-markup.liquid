@@ -8,7 +8,7 @@
         <h2 class="pdp-ajax-markup__product-name">
             {{ product.title }}
         </h2>
-
+        
         {% form 'product', product, id: 'product-form' %}
             <div class="pdp-ajax-markup__options">
                 {% for option in product.options_with_values %}
@@ -30,9 +30,9 @@
                     </div>
                 {% endfor %}
             </div>
-
+            
             <input type="hidden" name="id" value="{{ current_varinat.id }}" class="product-variant-id">
-
+            
             <div class="pdp-ajax-markup__buttons">
                 <button class="pdp-ajax-markup__button">
                     Add to cart
@@ -106,14 +106,14 @@
             const currentVariant = getCurrentVariant(variant)
             updateInputId(currentVariant.id)
             updateQueryString('variant', currentVariant.id)
-            updateVariantsAvailability(currentVariant)
+            updateVariantsAvailability(currentVariant, variant)
         })
     })
 
-    updateVariantsAvailability(variants[0]);
+    updateVariantsAvailability(selectedVariant, variants[0])
 
-    function updateVariantsAvailability (variantObject) {
-        pdp.querySelectorAll('.pdp-ajax-markup__option').forEach(option => {
+    function updateVariantsAvailability (variantObject, selectedVariant) {
+        const options = pdp.querySelectorAll('.pdp-ajax-markup__option').forEach(option => {
             option.querySelectorAll('.pdp-ajax-markup__variants').forEach(variants => {
                 const optionPosition = variants.dataset.optionPosition
                 variants.querySelectorAll('.pdp-ajax-markup__variant').forEach(variant => {
@@ -148,7 +148,6 @@
         const activeClass = 'is-active'
         const variantWrapper = variant.closest('.pdp-ajax-markup__variants')
         const prevActiveVariant = variantWrapper.querySelector(`.${activeClass}`)
-
         prevActiveVariant.classList.remove(activeClass)
         variant.classList.add(activeClass)
     }
@@ -158,11 +157,12 @@
         return Array.from(selectedVariants).map(variant => variant.dataset.variantValue)
     }
 
-    function getCurrentVariant () {
+    function getCurrentVariant (selectedVariant) {
         const currentOptions = getSelectedOptions()
-        return allVariants.find(variant => {
+        const currentVariant = allVariants.find(variant => {
             return !variant.options.map(option => currentOptions.includes(option)).includes(false)
         })
+        return currentVariant
     }
 
     function updateQueryString (key, value, url) {
@@ -200,7 +200,7 @@
 
 {% schema %}
 {
-"name": "Ajax markup",
-"tag": "section"
+    "name": "Ajax markup",
+    "tag": "section"
 }
 {% endschema %}
